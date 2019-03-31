@@ -25,7 +25,7 @@ systemctl start docker
 systemctl enable docker
 docker info
 
-yum install -y kubelet kubeadm kubectl
+yum install -y kubelet-1.13.4 kubeadm-1.13.4 kubectl-1.13.4 kubernetes-cni-0.6.0
 
 systemctl start kubelet.service
 systemctl enable kubelet.service
