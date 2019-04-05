@@ -1,0 +1,27 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.provision "shell", path: "common.sh"
+  config.vm.provision "file", source: "files", destination: "files"
+
+  config.vm.define "istio-vm" do |istioVM|
+    istioVM.vm.box = "centos/7"
+    istioVM.vm.hostname = "istio-vm"
+    istioVM.vm.network "private_network", ip: "192.168.33.15"
+
+    istioVM.vm.provider "virtualbox" do |vb|
+      vb.name = "istio-vm"
+      vb.gui = false
+      vb.cpus = 2
+      vb.memory = "4096"
+    end
+
+    istioVM.vm.provision "shell", path: "setup_k8s.sh"
+    istioVM.vm.provision "shell", privileged: false, path: "post_setup_k8s.sh"
+    istioVM.vm.provision "shell", path: "setup_istio.sh"
+
+  end
+
+end
