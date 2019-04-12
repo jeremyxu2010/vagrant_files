@@ -1,0 +1,83 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box_check_update = false
+
+  config.vm.provision "file", source: "files", destination: "$HOME/files"
+
+  # install tools on all vms
+  config.vm.provision :shell, path: "common.sh"
+
+  # install redis on all vms
+  config.vm.provision :shell, path: "install-redis.sh"
+
+  # install predixy on all vms
+  config.vm.provision :shell, path: "install-predixy.sh"
+
+  # install haproxy on all vms
+  config.vm.provision :shell, path: "install-haproxy.sh"
+
+  # install keepalived on all vms
+  config.vm.provision :shell, path: "install-keepalived.sh"
+
+  config.vm.define "redis-host1" do |c|
+    c.vm.box = "centos/7"
+    c.vm.hostname = "redis-host1"
+
+    c.vm.network "private_network", ip: "192.168.2.111"
+
+    # config redis on host1
+    c.vm.provision :shell, path: "config-redis-host1.sh"
+
+    # config keepalived on host1
+    c.vm.provision :shell, path: "config-keepalived-host1.sh"
+
+    c.vm.provider :virtualbox do |v|
+        v.customize ["modifyvm", :id, "--cpus", 2]
+        v.customize ["modifyvm", :id, "--memory", 4096]
+        v.customize ["modifyvm", :id, "--name", "redis-host1"]
+    end # end provider
+  end
+
+  config.vm.define "redis-host2" do |c|
+    c.vm.box = "centos/7"
+    c.vm.hostname = "redis-host2"
+
+    c.vm.network "private_network", ip: "192.168.2.112"
+
+    # config redis on host2
+    c.vm.provision :shell, path: "config-redis-host2.sh"
+
+    # config keepalived on host2
+    c.vm.provision :shell, path: "config-keepalived-host2.sh"
+
+    c.vm.provider :virtualbox do |v|
+        v.customize ["modifyvm", :id, "--cpus", 2]
+        v.customize ["modifyvm", :id, "--memory", 4096]
+        v.customize ["modifyvm", :id, "--name", "redis-host2"]
+    end # end provider
+  end
+
+  config.vm.define "redis-host3" do |c|
+    c.vm.box = "centos/7"
+    c.vm.hostname = "redis-host3"
+
+    c.vm.network "private_network", ip: "192.168.2.113"
+
+    # config redis on host3
+    c.vm.provision :shell, path: "config-redis-host3.sh"
+
+    # config keepalived on host3
+    c.vm.provision :shell, path: "config-keepalived-host3.sh"
+
+    c.vm.provider :virtualbox do |v|
+        v.customize ["modifyvm", :id, "--cpus", 2]
+        v.customize ["modifyvm", :id, "--memory", 4096]
+        v.customize ["modifyvm", :id, "--name", "redis-host3"]
+    end # end provider
+  end
+
+end
