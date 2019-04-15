@@ -40,6 +40,17 @@ WantedBy=multi-user.target
 EOF
 systemctl enable redis_6379
 systemctl start redis_6379
+cat << EOF >> /etc/logrotate.d/redis
+/var/log/redis_6379/*.log {
+    weekly
+    rotate 10
+    copytruncate
+    delaycompress
+    compress
+    notifempty
+    missingok
+}
+EOF
 
 cp -f /etc/redis.conf /etc/redis_6380.conf
 sed -i -e 's/^bind.*$/bind 192.168.2.113/' /etc/redis_6380.conf
@@ -81,17 +92,14 @@ WantedBy=multi-user.target
 EOF
 systemctl enable redis_6380
 systemctl start redis_6380
-
-#sed -i -e 's/^bind.*$/bind 192.168.2.113/' /etc/redis.conf
-#sed -i -e 's/^protected-mode.*$/protected-mode no/' /etc/redis.conf
-#sed -i -e '${s/$/\nslaveof 192.168.2.111 6379/}' /etc/redis.conf
-#
-#systemctl enable redis
-#systemctl start redis
-#
-#sed -i -e '${s/$/\nbind 192.168.2.113\nprotected-mode no/}' /etc/redis-sentinel.conf
-#sed -i -e '/^sentinel/ s/mymaster/clusterinstance/g' /etc/redis-sentinel.conf
-#sed -i -e 's/^sentinel monitor clusterinstance.*$/sentinel monitor clusterinstance 192.168.2.111 6379 2/' /etc/redis-sentinel.conf
-#
-#systemctl enable redis-sentinel
-#systemctl start redis-sentinel
+cat << EOF >> /etc/logrotate.d/redis
+/var/log/redis_6380/*.log {
+    weekly
+    rotate 10
+    copytruncate
+    delaycompress
+    compress
+    notifempty
+    missingok
+}
+EOF

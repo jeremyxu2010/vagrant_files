@@ -40,6 +40,17 @@ WantedBy=multi-user.target
 EOF
 systemctl enable redis_6379
 systemctl start redis_6379
+cat << EOF >> /etc/logrotate.d/redis
+/var/log/redis_6379/*.log {
+    weekly
+    rotate 10
+    copytruncate
+    delaycompress
+    compress
+    notifempty
+    missingok
+}
+EOF
 
 cp -f /etc/redis.conf /etc/redis_6380.conf
 sed -i -e 's/^bind.*$/bind 192.168.2.112/' /etc/redis_6380.conf
@@ -81,3 +92,14 @@ WantedBy=multi-user.target
 EOF
 systemctl enable redis_6380
 systemctl start redis_6380
+cat << EOF >> /etc/logrotate.d/redis
+/var/log/redis_6380/*.log {
+    weekly
+    rotate 10
+    copytruncate
+    delaycompress
+    compress
+    notifempty
+    missingok
+}
+EOF
