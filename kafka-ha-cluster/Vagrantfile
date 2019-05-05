@@ -32,7 +32,7 @@ Vagrant.configure("2") do |config|
     c.vm.box = "centos/7"
     c.vm.hostname = "kafka-host2"
 
-    c.vm.network "private_network", ip: "192.168.2.131"
+    c.vm.network "private_network", ip: "192.168.2.132"
 
     c.vm.provision "shell", path: "config-zookeeper-host2.sh"
 
@@ -49,7 +49,7 @@ Vagrant.configure("2") do |config|
     c.vm.box = "centos/7"
     c.vm.hostname = "kafka-host3"
 
-    c.vm.network "private_network", ip: "192.168.2.131"
+    c.vm.network "private_network", ip: "192.168.2.133"
 
     c.vm.provision "shell", path: "config-zookeeper-host3.sh"
 
