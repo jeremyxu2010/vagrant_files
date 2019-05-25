@@ -1,0 +1,4 @@
+[mysql-hosts]
+mysql-host1 ansible_ssh_host=192.168.33.21 ansible_ssh_port=22
+mysql-host2 ansible_ssh_host=192.168.33.22 ansible_ssh_port=22
+mysql-host3 ansible_ssh_host=192.168.33.23 ansible_ssh_port=22

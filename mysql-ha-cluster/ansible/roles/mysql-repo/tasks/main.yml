@@ -1,0 +1,4 @@
+- name: Configure MySQL yum repository
+  yum:
+    name: https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm
+    state: present

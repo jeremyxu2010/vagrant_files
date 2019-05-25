@@ -1,0 +1,17 @@
+- name: Configure CentOS Base yum repository
+  get_url:
+    url: http://mirrors.aliyun.com/repo/Centos-7.repo
+    dest: /etc/yum.repos.d/CentOS-Base.repo
+    mode: '0644'
+
+- name: Configure EL7 epel yum repository
+  yum:
+    name:
+      - epel-release
+    state: present
+
+- name: Configure EL7 epel yum repository
+  get_url:
+    url: http://mirrors.aliyun.com/repo/epel-7.repo
+    dest: /etc/yum.repos.d/epel.repo
+    mode: '0644'

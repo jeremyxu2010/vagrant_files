@@ -1,0 +1,15 @@
+---
+- hosts: mysql-hosts
+  gather_facts: yes
+  vars_files:
+    - vars/main.yml
+  roles:
+    - yum-repo
+    - disable-selinux
+    - disable-firewalld
+    - install-common-pkgs
+    - mysql-repo
+    - install-mysql-pkgs
+    - config-mysql
+    - config-mysqlrouter
+    # - uninstall-mysql

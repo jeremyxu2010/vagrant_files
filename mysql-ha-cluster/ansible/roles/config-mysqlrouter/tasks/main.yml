@@ -1,0 +1,9 @@
+- name: Generate mysqlrouter configuration
+  shell: "mysqlrouter --bootstrap root:{{ mysql_root_password | urlencode() | regex_replace('/', '%2F') }}@{{ hostvars[groups['mysql-hosts'][0]].ansible_ssh_host }}:3306 --user=mysqlrouter"
+  ignore_errors: yes
+
+- name: Start mysqlrouter service
+  systemd:
+    name: mysqlrouter
+    enabled: true
+    state: restarted

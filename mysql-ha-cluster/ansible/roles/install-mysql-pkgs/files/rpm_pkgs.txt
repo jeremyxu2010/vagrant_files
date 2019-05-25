@@ -1,0 +1,8 @@
+mysql-community-libs-compat-8.0.16-2.el7.x86_64.rpm
+mysql-community-libs-8.0.16-2.el7.x86_64.rpm
+mysql-community-embedded-compat-8.0.16-2.el7.x86_64.rpm
+mysql-router-community-8.0.16-2.el7.x86_64.rpm
+mysql-community-server-8.0.16-2.el7.x86_64.rpm
+mysql-shell-8.0.16-1.el7.x86_64.rpm
+mysql-community-common-8.0.16-2.el7.x86_64.rpm
+mysql-community-client-8.0.16-2.el7.x86_64.rpm

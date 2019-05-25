@@ -1,0 +1,26 @@
+- name: Stopped mysqld service
+  systemd:
+    name: mysqld
+    state: stopped
+
+- name: Stopped mysqlrouter service
+  systemd:
+    name: mysqlrouter
+    state: stopped
+
+- name: Remove MySQL packages
+  yum:
+    name:
+      - mysql-community-server
+      - mysql-shell
+      - mysql-router
+    state: absent
+
+- name: Delete MySQL files
+  file:
+    state: absent
+    path: "{{ item }}"
+  with_items:
+    - /var/lib/mysql
+    - /var/log/mysqld.log
+    - /var/lib/mysql_cluster_inited

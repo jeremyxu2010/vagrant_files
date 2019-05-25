@@ -1,0 +1,39 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "centos/7"
+  config.ssh.insert_key = false
+  config.vm.box_check_update = false
+
+  N = 3
+  (1..N).each do |machine_id|
+    config.vm.define "mysql-host#{machine_id}" do |machine|
+      machine.vm.hostname = "mysql-host#{machine_id}"
+      machine.vm.network "private_network", ip: "192.168.33.#{20+machine_id}"
+
+      config.vm.provider "virtualbox" do |vb|
+        vb.name = "mysql-host#{machine_id}"
+        vb.gui = false
+        vb.cpus = 1
+        vb.memory = "2048"
+      end
+
+      # Only execute once the Ansible provisioner,
+      # when all the machines are up and ready.
+      if machine_id == N
+        machine.vm.provision "ansible" do |ansible|
+          # Disable default limit to connect to all the machines
+          ansible.limit = "all"
+          ansible.compatibility_mode = "2.0"
+          ansible.playbook = "ansible/playbook.yml"
+          ansible.inventory_path = "ansible/inventory"
+          ansible.become = true
+        end
+      end
+    end
+  end
+
+end

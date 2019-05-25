@@ -1,0 +1,19 @@
+- name: Install MySQL packages
+  find:
+    paths: "/vagrant/ansible/roles/install-mysql-pkgs/files"
+    patterns: "*.rpm"
+  register: rpm_result
+
+- name: Install MySQL packages
+  yum:
+    name: "{{ item.path }}"
+    state: present
+  with_items: "{{ rpm_result.files }}"
+
+# - name: Install MySQL packages
+#   yum:
+#     name:
+#       - mysql-community-server
+#       - mysql-shell
+#       - mysql-router
+#     state: present

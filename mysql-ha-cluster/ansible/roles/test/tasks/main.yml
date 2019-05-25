@@ -1,0 +1,2 @@
+- name: test
+  command: echo '123'

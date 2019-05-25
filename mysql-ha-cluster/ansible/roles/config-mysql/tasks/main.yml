@@ -1,0 +1,85 @@
+- name: Add host name resolve
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ hostvars['mysql-host1'].ansible_ssh_host }} mysql-host1"
+
+- name: Add host name resolve
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ hostvars['mysql-host2'].ansible_ssh_host }} mysql-host2"
+
+- name: Add host name resolve
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ hostvars['mysql-host3'].ansible_ssh_host }} mysql-host3"
+
+- name: Start mysqld service
+  systemd:
+    name: mysqld
+    state: started
+
+- name: Change MySQL root password
+  shell: "awk  '/temporary password/{print $NF}' /var/log/mysqld.log"
+  register: mysql_password_result
+
+- name: Change MySQL root password
+  shell: "MYSQL_PWD='{{ mysql_password_result.stdout }}' mysql --connect-expired-password -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';\""
+  ignore_errors: yes
+
+- name: Change MySQL root password
+  shell: "MYSQL_PWD='{{ mysql_root_password }}' mysql --connect-expired-password -e \"CREATE USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';\""
+  ignore_errors: yes
+
+- name: Change MySQL root password
+  shell: "MYSQL_PWD='{{ mysql_root_password }}' mysql --connect-expired-password -e \"GRANT ALL ON *.* TO 'root'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;\""
+  ignore_errors: yes
+
+- name: Get the flag to check the MySQL cluster is inited or not
+  stat:
+    path: /var/lib/mysql_cluster_inited
+  register: stat_result
+
+- name: Configure MySQL Local Instance
+  template:
+    src: config_local_instance.js.j2
+    dest: /tmp/config_local_instance.js
+  when: stat_result.stat.exists == False
+
+- name: Configure MySQL Local Instance
+  shell: "mysqlsh --no-password --js --file=/tmp/config_local_instance.js"
+  when: stat_result.stat.exists == False
+
+- name: Restart mysqld service
+  systemd:
+    name: mysqld
+    state: restarted
+  when: stat_result.stat.exists == False
+
+- name: Check MySQL Local Instance
+  template:
+    src: check_local_instance.js.j2
+    dest: /tmp/check_local_instance.js
+  when: stat_result.stat.exists == False
+
+- name: Check MySQL Local Instance
+  shell: "mysqlsh --no-password --js --file=/tmp/check_local_instance.js"
+  when: stat_result.stat.exists == False
+
+- name: Init MySQL Cluster
+  template:
+    src: init_cluster.js.j2
+    dest: /tmp/init_cluster.js
+  when: stat_result.stat.exists == False
+
+- name: Init MySQL Cluster
+  shell: "mysqlsh --no-password --js --file=/tmp/init_cluster.js"
+  run_once: true
+  when: stat_result.stat.exists == False and inventory_hostname == 'mysql-host1'
+
+- name: Init MySQL Cluster
+  file:
+    path: /var/lib/mysql_cluster_inited
+    state: touch
+  when: stat_result.stat.exists == False
+  
+

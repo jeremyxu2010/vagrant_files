@@ -1,0 +1,5 @@
+shell.connect('root@localhost:3306', '{{ mysql_root_password }}')
+dba.createCluster('mycluster', {'localAddress': '{{ hostvars[groups['mysql-hosts'][0]].ansible_ssh_host }}'})
+var cluster=dba.getCluster('mycluster')
+cluster.addInstance('root@{{ hostvars[groups['mysql-hosts'][1]].ansible_ssh_host }}:3306', {'localAddress': '{{ hostvars[groups['mysql-hosts'][1]].ansible_ssh_host }}', 'password': '{{ mysql_root_password }}'})
+cluster.addInstance('root@{{ hostvars[groups['mysql-hosts'][2]].ansible_ssh_host }}:3306', {'localAddress': '{{ hostvars[groups['mysql-hosts'][2]].ansible_ssh_host }}', 'password': '{{ mysql_root_password }}'})
