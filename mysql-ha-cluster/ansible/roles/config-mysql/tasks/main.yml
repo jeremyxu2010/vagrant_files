@@ -38,6 +38,12 @@
   stat:
     path: /var/lib/mysql_cluster_inited
   register: stat_result
+  
+- name: Configure group replication ip whitelist
+  lineinfile:
+    path: /etc/my.cnf
+    line: "loose-group_replication_ip_whitelist='{{ hostvars['mysql-host1'].ansible_ssh_host }},{{ hostvars['mysql-host2'].ansible_ssh_host }},{{ hostvars['mysql-host3'].ansible_ssh_host }}'"
+  when: stat_result.stat.exists == False
 
 - name: Configure MySQL Local Instance
   template:
