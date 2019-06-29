@@ -1,0 +1,196 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Configure yum repository
+    get_url:
+      url: http://mirrors.aliyun.com/repo/Centos-7.repo
+      dest: /etc/yum.repos.d/CentOS-Base.repo
+      force: yes
+      mode: '0440'
+  
+  - name: Configure yum repository
+    lineinfile:
+      path: /etc/yum.repos.d/CentOS-Base.repo
+      regexp: '^.*aliyuncs.*$'
+      state: absent
+  
+  - name: Configure yum repository
+    get_url:
+      url: http://mirrors.aliyun.com/repo/epel-7.repo
+      dest: /etc/yum.repos.d/epel.repo
+      force: yes
+      mode: '0440'
+  
+  - name: Install packages
+    yum:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+      - vim
+      - net-tools
+      - lsof
+      - tcpdump
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+      - conntrack
+      - ipvsadm
+      - ipset 
+      - jq
+      - sysstat
+      - curl
+      - iptables
+
+  - name: Stop and disable firewalld.
+    service:
+      name: firewalld
+      state: stopped
+      enabled: no
+  
+  - name: Disable SELinux at next reboot
+    selinux:
+      state: disabled
+
+  - name: Set SELinux in permissive mode until the machine is rebooted
+    command: setenforce 0
+    ignore_errors: true
+    changed_when: false
+
+  - name: Add CentOS_7 docker repository
+    shell: yum-config-manager --add-repo=http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+    args:
+      creates: /etc/yum.repos.d/docker-ce.repo
+
+  - name: Install docker and its dependecies
+    yum: 
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+      - docker-ce
+    notify:
+      - docker status
+
+  - name: Add vagrant user to docker group
+    user:
+      name: vagrant
+      group: docker
+
+  - name: Remove swapfile from /etc/fstab
+    mount:
+      name: "{{ item }}"
+      fstype: swap
+      state: absent
+    with_items:
+      - swap
+      - none
+
+  - name: Disable swap
+    command: swapoff -a
+    when: ansible_swaptotal_mb > 0
+
+  - rpm_key:
+      state: present
+      key: http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
+
+  - rpm_key:
+      state: present
+      key: http://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+
+  - name: Add kubernetes repository
+    copy:
+      src: kubernetes.repo
+      dest: kubernetes.repo
+
+  - name: Add kubernetes repository
+    shell: yum-config-manager --add-repo=kubernetes.repo
+    args:
+      creates: /etc/yum.repos.d/kubernetes.repo
+    ignore_errors: true
+
+  - name: Install Kubernetes binaries
+    yum: 
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+        - kubelet-1.13.4 
+        - kubeadm-1.13.4 
+        - kubectl-1.13.4
+        - kubernetes-cni-0.6.0
+
+  - name: Configure sysctl
+    command: modprobe br_netfilter
+
+  - name: Configure sysctl
+    sysctl: 
+      name: "{{ item.key }}"
+      value: "{{ item.value }}"
+      state: present
+    with_items:
+      - key: net.bridge.bridge-nf-call-ip6tables
+        value: 1
+      - key: net.bridge.bridge-nf-call-iptables
+        value: 1
+      - key: net.ipv4.ip_forward
+        value: 1
+
+  - name: Configure sysctl
+    command: sysctl --system
+
+  - name: Restart docker
+    service:
+      name: docker
+      daemon_reload: yes
+      state: restarted
+
+  - name: Restart kubelet
+    service:
+      name: kubelet
+      daemon_reload: yes
+      state: restarted
+
+  - name: Pull images
+    copy:
+      src: pull-images.sh
+      dest: pull-images.sh
+
+  - name: Pull images
+    command: "bash pull-images.sh"
+    ignore_errors: true
+
+  - name: Initialize the Kubernetes cluster using kubeadm
+    command: kubeadm init --apiserver-advertise-address="192.168.50.10" --apiserver-cert-extra-sans="192.168.50.10"  --node-name k8s-master --pod-network-cidr=192.168.0.0/16 --kubernetes-version v1.13.4
+    ignore_errors: true
+
+  - name: Setup kubeconfig for vagrant user
+    command: "{{ item }}"
+    with_items:
+     - mkdir -p /home/vagrant/.kube
+     - cp -f /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+     - chown vagrant:vagrant /home/vagrant/.kube/config
+
+  - name: Install flannel pod network
+    copy:
+      src: kube-flannel.yml
+      dest: kube-flannel.yml
+
+  - name: Install flannel pod network
+    become: false
+    command: kubectl apply -f kube-flannel.yml
+
+  - name: Generate join command
+    command: kubeadm token create --print-join-command
+    register: join_command
+
+  - name: Copy join command to local file
+    local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
+
+  handlers:
+    - name: docker status
+      service: name=docker state=started
